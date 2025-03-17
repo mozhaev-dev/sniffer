@@ -1,6 +1,6 @@
 use super::ip::IpHeader;
 use super::transport::{TcpHeader, UdpHeader};
-use crate::cli::comands::ProtocolFilter;
+use crate::cli::commands::ProtocolFilter;
 use pcap::Packet;
 
 #[derive(Debug)]

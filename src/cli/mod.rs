@@ -1,9 +1,9 @@
-pub mod comands;
+pub mod commands;
 pub mod logger;
 
 use clap::Parser;
-use comands::Cli;
+use commands::Cli;
 
 pub fn parse() -> Cli {
-    comands::Cli::parse()
+    commands::Cli::parse()
 }

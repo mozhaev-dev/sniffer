@@ -1,35 +1,23 @@
-use crate::cli::comands::ProtocolFilter;
-use pcap::{Capture, Device};
-
 mod ip;
 mod packet;
 mod transport;
 
-pub fn start(interface_name: &str, protocol_filter: ProtocolFilter, port_filter: u16) {
-    let device = Device::list()
-        .expect("Не удалось получить список интерфейсов")
-        .into_iter()
-        .find(|d| d.name == interface_name);
+use crate::cli::commands::ProtocolFilter;
+use crate::cli::logger::{log_err_exit, log_info};
+use pcap::{Capture, Device};
 
-    let device = match device {
-        Some(dev) => dev,
-        None => {
-            eprintln!("Интерфейс {} не найден!", interface_name);
-            return;
-        }
-    };
+pub fn start(interface: Device, protocol_filter: ProtocolFilter, port_filter: u16) {
+    log_info(&format!(
+        "Start capturing on interface: {} (Protocol: {:?}, Port: {})",
+        interface.name, protocol_filter, port_filter
+    ));
 
-    println!(
-        "Начинаем захват на интерфейсе: {} (Фильтр: {:?}, Порт: {})",
-        device.name, protocol_filter, port_filter
-    );
-
-    let mut cap = Capture::from_device(device)
-        .expect("Ошибка при открытии устройства")
+    let mut cap = Capture::from_device(interface)
+        .unwrap_or_else(|_err| log_err_exit("Can't open interface"))
         .promisc(true)
         .snaplen(65535)
         .open()
-        .expect("Не удалось начать захват");
+        .unwrap_or_else(|_err| log_err_exit("Can't start capturing"));
 
     while let Ok(packet) = cap.next() {
         packet::process_packet(&packet, &protocol_filter, port_filter);

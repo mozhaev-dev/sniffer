@@ -8,15 +8,15 @@ pub enum ProtocolFilter {
     Icmp,
 }
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    pub command: Commands,
 }
 
-#[derive(Subcommand)]
-enum Commands {
+#[derive(Subcommand, Debug)]
+pub enum Commands {
     /// Start listening
     Listen(ListenArgs),
 
@@ -24,16 +24,16 @@ enum Commands {
     List,
 }
 
-#[derive(Args)]
-struct ListenArgs {
+#[derive(Args, Debug)]
+pub struct ListenArgs {
     /// Network interface name
-    interface: String,
+    pub interface: String,
 
     #[arg(long, short = 'P', default_value = "all")]
     /// Transport layer protocol
-    protocol: ProtocolFilter,
+    pub protocol: ProtocolFilter,
 
     #[arg(long, short = 'p', default_value_t = 0)]
     /// Port, 0 - all ports
-    port: u16,
+    pub port: u16,
 }
