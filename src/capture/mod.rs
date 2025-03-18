@@ -2,14 +2,21 @@ mod ip;
 mod packet;
 mod transport;
 
-use crate::cli::commands::ProtocolFilter;
 use crate::cli::logger::{log_err_exit, log_info};
 use pcap::{Capture, Device};
 
-pub fn start(interface: Device, protocol_filter: ProtocolFilter, port_filter: u16) {
+#[derive(Debug, PartialEq)]
+pub enum Protocol {
+    All,
+    Tcp,
+    Udp,
+    Icmp,
+}
+
+pub fn start(interface: Device, protocol: Protocol, port_filter: u16) {
     log_info(&format!(
         "Start capturing on interface: {} (Protocol: {:?}, Port: {})",
-        interface.name, protocol_filter, port_filter
+        interface.name, protocol, port_filter
     ));
 
     let mut cap = Capture::from_device(interface)
@@ -20,6 +27,6 @@ pub fn start(interface: Device, protocol_filter: ProtocolFilter, port_filter: u1
         .unwrap_or_else(|_err| log_err_exit("Can't start capturing"));
 
     while let Ok(packet) = cap.next() {
-        packet::process_packet(&packet, &protocol_filter, port_filter);
+        packet::process_packet(&packet, &protocol, port_filter);
     }
 }

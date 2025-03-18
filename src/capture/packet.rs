@@ -1,6 +1,6 @@
 use super::ip::IpHeader;
 use super::transport::{TcpHeader, UdpHeader};
-use crate::cli::commands::ProtocolFilter;
+use super::Protocol;
 use pcap::Packet;
 
 #[derive(Debug)]
@@ -49,18 +49,18 @@ impl EthernetHeader {
     }
 }
 
-pub fn process_packet(packet: &Packet, protocol_filter: &ProtocolFilter, port_filter: u16) {
+pub fn process_packet(packet: &Packet, protocol: &Protocol, port: u16) {
     if let Some(eth) = EthernetHeader::from_packet(packet) {
         eth.display();
 
         if eth.ethertype == 0x0800 {
             if let Some(ip) = IpHeader::from_bytes(&packet.data[14..]) {
                 // Фильтруем по протоколу
-                if !matches!(protocol_filter, ProtocolFilter::All) {
+                if !matches!(protocol, Protocol::All) {
                     match ip.protocol {
-                        6 if *protocol_filter != ProtocolFilter::Tcp => return, // TCP
-                        17 if *protocol_filter != ProtocolFilter::Udp => return, // UDP
-                        1 if *protocol_filter != ProtocolFilter::Icmp => return, // ICMP
+                        6 if *protocol != Protocol::Tcp => return,  // TCP
+                        17 if *protocol != Protocol::Udp => return, // UDP
+                        1 if *protocol != Protocol::Icmp => return, // ICMP
                         _ => {}
                     }
                 }
@@ -75,9 +75,7 @@ pub fn process_packet(packet: &Packet, protocol_filter: &ProtocolFilter, port_fi
                         // TCP
                         if let Some(tcp) = TcpHeader::from_bytes(transport_data) {
                             // Фильтруем по порту
-                            if port_filter != 0
-                                && tcp.source_port != port_filter
-                                && tcp.destination_port != port_filter
+                            if port != 0 && tcp.source_port != port && tcp.destination_port != port
                             {
                                 return;
                             }
@@ -87,9 +85,7 @@ pub fn process_packet(packet: &Packet, protocol_filter: &ProtocolFilter, port_fi
                     17 => {
                         // UDP
                         if let Some(udp) = UdpHeader::from_bytes(transport_data) {
-                            if port_filter != 0
-                                && udp.source_port != port_filter
-                                && udp.destination_port != port_filter
+                            if port != 0 && udp.source_port != port && udp.destination_port != port
                             {
                                 return;
                             }

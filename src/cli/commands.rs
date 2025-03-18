@@ -1,6 +1,6 @@
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
-#[derive(Debug, ValueEnum, Clone, PartialEq)]
+#[derive(ValueEnum, Clone)]
 pub enum ProtocolFilter {
     All,
     Tcp,
@@ -8,14 +8,14 @@ pub enum ProtocolFilter {
     Icmp,
 }
 
-#[derive(Parser, Debug)]
+#[derive(Parser)]
 #[command(version, about, long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand)]
 pub enum Commands {
     /// Start listening
     Listen(ListenArgs),
@@ -24,7 +24,7 @@ pub enum Commands {
     List,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args)]
 pub struct ListenArgs {
     /// Network interface name
     pub interface: String,
