@@ -1,9 +1,9 @@
-mod ip;
-mod packet;
-mod transport;
+mod tcp_ip;
 
 use crate::cli::logger::{log_err_exit, log_info};
-use pcap::{Capture, Device};
+use pcap::{Capture, Device, Linktype, Packet};
+use tcp_ip::data_link::DataLink;
+use tcp_ip::network::Network;
 
 #[derive(Debug, PartialEq)]
 pub enum Protocol {
@@ -26,7 +26,34 @@ pub fn start(interface: Device, protocol: Protocol, port_filter: u16) {
         .open()
         .unwrap_or_else(|_err| log_err_exit("Can't start capturing"));
 
+    let data_link = cap.get_datalink();
+
     while let Ok(packet) = cap.next() {
-        packet::process_packet(&packet, &protocol, port_filter);
+        Captured::new(&packet, data_link);
+    }
+}
+
+pub struct Captured<'d> {
+    pub data_link: Option<DataLink<'d>>,
+    pub network: Option<Network<'d>>,
+    // pub transport: Option<Transport>,
+    pub raw_data: &'d [u8],
+}
+
+impl<'d> Captured<'d> {
+    pub fn new(packet: &'d Packet, link_type: Linktype) -> Option<Self> {
+        let data_link = DataLink::new(packet, link_type);
+
+        let network = data_link.as_ref().and_then(|dl| {
+            dl.network_protocol
+                .as_ref()
+                .and_then(|np| Network::new(dl.payload, np))
+        });
+
+        Some(Self {
+            data_link,
+            network,
+            raw_data: packet.data,
+        })
     }
 }
