@@ -3,7 +3,7 @@ use std::fmt::Display;
 use crate::{capture::tcp_ip::transport::TransportProtocol, cli::logger::log_warn};
 
 pub struct Ip4Header<'d> {
-    header_length: usize,
+    header_len: usize,
     source: [u8; 4],
     destination: [u8; 4],
     transport_protocol: u8,
@@ -13,10 +13,10 @@ pub struct Ip4Header<'d> {
 impl<'d> Ip4Header<'d> {
     pub fn new(data: &'d [u8]) -> Option<Self> {
         let ihl = data[0] & 0x0F;
-        let header_length = ihl * 4;
-        let header_length: usize = header_length.into();
+        let header_len = ihl * 4;
+        let header_len: usize = header_len.into();
 
-        if data.len() < header_length {
+        if data.len() < header_len {
             log_warn("Can't read IP packet");
             return None;
         }
@@ -26,7 +26,7 @@ impl<'d> Ip4Header<'d> {
         let transport_protocol = data[9];
 
         Some(Self {
-            header_length,
+            header_len,
             source,
             destination,
             transport_protocol,
@@ -35,7 +35,7 @@ impl<'d> Ip4Header<'d> {
     }
 
     pub fn get_payload(&self) -> &'d [u8] {
-        &self.raw_data[self.header_length..]
+        &self.raw_data[self.header_len..]
     }
 
     pub fn get_transport_protocol(&self) -> Option<TransportProtocol> {
